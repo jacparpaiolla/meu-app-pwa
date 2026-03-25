@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obrigações • FinTrack</title>
+
+  <!-- ══ PWA: MANIFEST ══════════════════════════════════════════
+       Diz ao navegador que isso é um PWA instalável.
+       Define nome, ícone e como o app abre.
+  ═══════════════════════════════════════════════════════════════ -->
+  <link rel="manifest" href="./manifest.json">
+
+  <!-- Cor da barra de status no Android -->
+  <meta name="theme-color" content="#10B981">
+
+  <!-- iOS: permite adicionar à tela inicial como app -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="FinTrack">
+
+  <!-- Ícone para iOS (Safari não usa o manifest.json) -->
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #10B981;
+    --green-light: #D1FAE5;
+    --green-mid: #6EE7B7;
+    --amber: #F59E0B;
+    --amber-light: #FEF3C7;
+    --red: #EF4444;
+    --red-light: #FEE2E2;
+    --bg: #F9FAFB;
+    --surface: #FFFFFF;
+    --border: #E5E7EB;
+    --text: #111827;
+    --text-muted: #6B7280;
+    --text-light: #9CA3AF;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow: 0 4px 16px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .header-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--green);
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 15px;
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg);
+    padding: 4px;
+    border-radius: 10px;
+  }
+
+  .nav-tab {
+    padding: 6px 16px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .nav-tab.active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ── MAIN ── */
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 20px 100px;
+  }
+
+  /* ── SUMMARY CARDS ── */
+  .summary-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .summary-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 20px 18px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .summary-card.card-red::before { background: var(--red); }
+  .summary-card.card-amber::before { background: var(--amber); }
+  .summary-card.card-green::before { background: var(--green); }
+
+  .summary-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+
+  .summary-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    line-height: 1.1;
+  }
+
+  .summary-card.card-red .summary-value { color: var(--red); }
+  .summary-card.card-amber .summary-value { color: var(--amber); }
+  .summary-card.card-green .summary-value { color: var(--green); }
+
+  .summary-sub {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    margin-top: 4px;
+  }
+
+  /* Progress bar */
+  .progress-bar-wrap {
+    margin-top: 10px;
+    height: 5px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 99px;
+    transition: width 0.6s ease;
+  }
+
+  /* ── FILTERS ── */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 6px 14px;
+    border-radius: 99px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-btn.active {
+    background: var(--text);
+    border-color: var(--text);
+    color: white;
+  }
+
+  .filter-select {
+    padding: 6px 12px;
+    border-radius: 99px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    margin-left: auto;
+  }
+
+  /* ── LIST ── */
+  .obligations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .obligation-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-sm);
+    animation: slideIn 0.25s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .obligation-card:hover {
+    box-shadow: var(--shadow);
+    border-color: #D1D5DB;
+  }
+
+  .obligation-card.status-paid {
+    background: #FAFFFE;
+    border-color: var(--green-light);
+  }
+
+  .obligation-card.status-overdue {
+    background: #FFFAFA;
+    border-color: #FECACA;
+  }
+
+  .obligation-card.status-soon {
+    background: #FFFDF5;
+    border-color: #FDE68A;
+  }
+
+  .ob-left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ob-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ob-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+
+  .ob-date {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .ob-category {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 99px;
+    background: var(--bg);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .status-pill {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 99px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .status-pill.pill-paid { background: var(--green-light); color: #065F46; }
+  .status-pill.pill-overdue { background: var(--red-light); color: #991B1B; }
+  .status-pill.pill-soon { background: var(--amber-light); color: #92400E; }
+  .status-pill.pill-pending { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+
+  .ob-value {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    font-size: 1rem;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .status-paid .ob-value { color: var(--green); }
+  .status-overdue .ob-value { color: var(--red); }
+  .status-soon .ob-value { color: var(--amber); }
+
+  .ob-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-pay {
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--green);
+    color: white;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-pay:hover { background: #059669; transform: translateY(-1px); }
+
+  .btn-paid {
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--green-light);
+    background: var(--green-light);
+    color: #065F46;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-paid:hover { background: #A7F3D0; }
+
+  .btn-icon {
+    width: 34px; height: 34px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 14px;
+  }
+
+  .btn-icon:hover { background: var(--bg); color: var(--text); }
+  .btn-icon.delete:hover { background: var(--red-light); border-color: #FECACA; color: var(--red); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+
+  .empty-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .empty-sub { font-size: 0.875rem; }
+
+  /* ── FAB ── */
+  .fab {
+    position: fixed;
+    bottom: 28px;
+    right: 24px;
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--green);
+    color: white;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(16,185,129,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    z-index: 90;
+  }
+
+  .fab:hover { background: #059669; transform: scale(1.08); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  @media (min-width: 600px) {
+    .modal-overlay { align-items: center; }
+  }
+
+  .modal {
+    background: var(--surface);
+    width: 100%;
+    max-width: 500px;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 28px 24px 32px;
+    transform: translateY(40px);
+    transition: transform 0.3s cubic-bezier(.22,1,.36,1);
+  }
+
+  @media (min-width: 600px) {
+    .modal {
+      border-radius: var(--radius);
+      transform: translateY(20px) scale(0.97);
+    }
+  }
+
+  .modal-overlay.open .modal {
+    transform: translateY(0) scale(1);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .modal-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .modal-close {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.15s;
+  }
+
+  .modal-close:hover { background: var(--red-light); border-color: #FECACA; color: var(--red); }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .form-input:focus { border-color: var(--green); background: var(--surface); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .category-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .cat-chip {
+    padding: 4px 10px;
+    border-radius: 99px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .cat-chip:hover, .cat-chip.selected {
+    background: var(--green-light);
+    border-color: var(--green-mid);
+    color: #065F46;
+  }
+
+  .btn-submit {
+    width: 100%;
+    padding: 13px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--green);
+    color: white;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.2s;
+  }
+
+  .btn-submit:hover { background: #059669; }
+
+  /* ── PAGE: MANAGE ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .summary-strip { grid-template-columns: 1fr; gap: 10px; }
+    .summary-value { font-size: 1.35rem; }
+    .form-row { grid-template-columns: 1fr; }
+    .ob-actions { flex-direction: column; gap: 4px; align-items: flex-end; }
+    .btn-pay, .btn-paid { font-size: 0.75rem; padding: 6px 10px; }
+    .ob-value { font-size: 0.9rem; }
+    .nav-tabs { display: none; }
+    .bottom-nav { display: flex; }
+  }
+
+  /* Bottom nav (mobile only) */
+  .bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 0 0 env(safe-area-inset-bottom);
+    z-index: 100;
+  }
+
+  .bottom-nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 0;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.7rem;
+    font-weight: 500;
+    cursor: pointer;
+    gap: 4px;
+  }
+
+  .bottom-nav-btn.active { color: var(--green); }
+  .bottom-nav-icon { font-size: 20px; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #111827;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 99px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    z-index: 500;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">₢</div>
+      FinTrack
+    </div>
+    <nav class="nav-tabs">
+      <button class="nav-tab active" onclick="showPage('dashboard')">Dashboard</button>
+      <button class="nav-tab" onclick="showPage('manage')">Gerenciar</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- DASHBOARD PAGE -->
+  <div id="page-dashboard" class="page active">
+    <div class="summary-strip" id="summary-strip"></div>
+
+    <div class="toolbar">
+      <button class="filter-btn active" onclick="setFilter('all', this)">Todas</button>
+      <button class="filter-btn" onclick="setFilter('pending', this)">Pendentes</button>
+      <button class="filter-btn" onclick="setFilter('paid', this)">Pagas</button>
+      <button class="filter-btn" onclick="setFilter('overdue', this)">Vencidas</button>
+      <select class="filter-select" id="cat-filter" onchange="renderList()">
+        <option value="">Todas categorias</option>
+      </select>
+    </div>
+
+    <div class="obligations-list" id="obligations-list"></div>
+  </div>
+
+  <!-- MANAGE PAGE -->
+  <div id="page-manage" class="page">
+    <div class="obligations-list" id="manage-list"></div>
+  </div>
+</main>
+
+<!-- FAB -->
+<button class="fab" onclick="openModal()" title="Nova Obrigação">+</button>
+
+<!-- Bottom nav (mobile) -->
+<nav class="bottom-nav">
+  <button class="bottom-nav-btn active" onclick="showPage('dashboard', this)">
+    <span class="bottom-nav-icon">🏠</span>
+    Início
+  </button>
+  <button class="bottom-nav-btn" onclick="showPage('manage', this)">
+    <span class="bottom-nav-icon">📋</span>
+    Gerenciar
+  </button>
+</nav>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Nova Obrigação</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Nome</label>
+      <input class="form-input" id="f-name" placeholder="Ex: Aluguel, Internet, IPTU…" />
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Valor (R$)</label>
+        <input class="form-input" id="f-value" type="number" min="0" step="0.01" placeholder="0,00" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Vencimento</label>
+        <input class="form-input" id="f-date" type="date" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Categoria</label>
+      <input class="form-input" id="f-category" placeholder="Digite ou escolha abaixo" />
+      <div class="category-suggestions" id="cat-suggestions"></div>
+    </div>
+
+    <button class="btn-submit" onclick="submitForm()">Salvar Obrigação</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────
+const STORAGE_KEY = 'fintrack_obligations';
+const CATS_KEY    = 'fintrack_categories';
+
+let obligations = [];
+let categories  = [];
+let editingId   = null;
+let activeFilter = 'all';
+
+function load() {
+  try {
+    obligations = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    categories  = JSON.parse(localStorage.getItem(CATS_KEY))    || ['Moradia','Transporte','Saúde','Educação','Serviços','Impostos','Outros'];
+  } catch { obligations = []; categories = ['Moradia','Transporte','Saúde','Educação','Serviços','Impostos','Outros']; }
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(obligations));
+  localStorage.setItem(CATS_KEY, JSON.stringify(categories));
+}
+
+// ── STATUS LOGIC ──────────────────────────────────────
+function getStatus(ob) {
+  if (ob.paid) return 'paid';
+  const today = new Date(); today.setHours(0,0,0,0);
+  const due   = new Date(ob.due + 'T00:00:00');
+  const diff  = Math.floor((due - today) / 86400000);
+  if (diff < 0)  return 'overdue';
+  if (diff <= 5) return 'soon';
+  return 'pending';
+}
+
+function daysLabel(ob) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const due   = new Date(ob.due + 'T00:00:00');
+  const diff  = Math.floor((due - today) / 86400000);
+  const paid  =  ob.paid 
+  if (diff === 0 && !paid) return 'Vence hoje';
+  if (diff === 1 && !paid ) return 'Vence amanhã';
+  if (diff < 0  && !paid)  return `Venceu há ${Math.abs(diff)} dia${Math.abs(diff)>1?'s':''}`;
+  if (diff <= 5 && !paid)  return `Vence em ${diff} dias`;
+  return formatDate(ob.due);
+}
+
+function formatDate(d) {
+  const [y,m,day] = d.split('-');
+  return `${day}/${m}/${y}`;
+}
+
+function formatCurrency(v) {
+  return Number(v).toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+}
+
+// ── SUMMARY ───────────────────────────────────────────
+function renderSummary() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const weekEnd = new Date(today); weekEnd.setDate(today.getDate() + 7);
+
+  const totalPending = obligations
+    .filter(o => !o.paid)
+    .reduce((a,b) => a + Number(b.value), 0);
+
+  const dueSoon = obligations.filter(o => {
+    if (o.paid) return false;
+    const due = new Date(o.due + 'T00:00:00');
+    return due >= today && due <= weekEnd;
+  }).length;
+
+  const thisMonth = obligations.filter(o => {
+    const due = new Date(o.due + 'T00:00:00');
+    return due.getMonth() === today.getMonth() && due.getFullYear() === today.getFullYear();
+  });
+
+  const paidThisMonth = thisMonth.filter(o => o.paid).length;
+  const progress = thisMonth.length ? Math.round((paidThisMonth / thisMonth.length) * 100) : 0;
+
+  document.getElementById('summary-strip').innerHTML = `
+    <div class="summary-card card-red">
+      <div class="summary-label">Total Pendente</div>
+      <div class="summary-value">${formatCurrency(totalPending)}</div>
+      <div class="summary-sub">${obligations.filter(o=>!o.paid).length} obrigação(ões) em aberto</div>
+    </div>
+    <div class="summary-card card-amber">
+      <div class="summary-label">Vencendo esta Semana</div>
+      <div class="summary-value">${dueSoon}</div>
+      <div class="summary-sub">próximos 7 dias</div>
+    </div>
+    <div class="summary-card card-green">
+      <div class="summary-label">Progresso Mensal</div>
+      <div class="summary-value">${progress}%</div>
+      <div class="summary-sub">${paidThisMonth} de ${thisMonth.length} pagas este mês</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" style="width:${progress}%"></div>
+      </div>
+    </div>`;
+}
+
+// ── LIST ──────────────────────────────────────────────
+function renderList() {
+  const catFilter = document.getElementById('cat-filter')?.value || '';
+  let items = [...obligations].sort((a,b) => a.due.localeCompare(b.due));
+
+  if (activeFilter === 'pending') items = items.filter(o => !o.paid && getStatus(o) !== 'overdue');
+  else if (activeFilter === 'paid')    items = items.filter(o => o.paid);
+  else if (activeFilter === 'overdue') items = items.filter(o => getStatus(o) === 'overdue');
+
+  if (catFilter) items = items.filter(o => o.category === catFilter);
+
+  updateCatFilter();
+
+  const el = document.getElementById('obligations-list');
+  if (!items.length) {
+    el.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <div class="empty-title">Nenhuma obrigação encontrada</div>
+      <div class="empty-sub">Toque no + para adicionar uma nova.</div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = items.map(ob => cardHTML(ob, false)).join('');
+}
+
+function renderManage() {
+  const items = [...obligations].sort((a,b) => a.due.localeCompare(b.due));
+  const el = document.getElementById('manage-list');
+  if (!items.length) {
+    el.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <div class="empty-title">Nenhuma obrigação cadastrada</div>
+      <div class="empty-sub">Use o botão + para começar.</div>
+    </div>`;
+    return;
+  }
+  el.innerHTML = items.map(ob => cardHTML(ob, true)).join('');
+}
+
+function cardHTML(ob, manage) {
+  const status = getStatus(ob);
+  const statusClass = `status-${status}`;
+  const pillClass   = `pill-${status}`;
+  const pillLabel   = { paid:'Pago', overdue:'Vencido', soon:'Urgente', pending:'Pendente' }[status];
+
+  const payBtn = ob.paid
+    ? `<button class="btn-paid" onclick="togglePaid('${ob.id}')">✓ Pago</button>`
+    : `<button class="btn-pay"  onclick="togglePaid('${ob.id}')">Marcar como Pago</button>`;
+
+  const editDel = manage ? `
+    <button class="btn-icon" onclick="editOb('${ob.id}')" title="Editar">✏️</button>
+    <button class="btn-icon delete" onclick="deleteOb('${ob.id}')" title="Excluir">🗑</button>
+  ` : `
+    <button class="btn-icon" onclick="editOb('${ob.id}')" title="Editar">✏️</button>
+    <button class="btn-icon delete" onclick="deleteOb('${ob.id}')" title="Excluir">🗑</button>
+  `;
+
+  return `
+    <div class="obligation-card ${statusClass}" id="card-${ob.id}">
+      <div class="ob-left">
+        <div class="ob-name">${ob.name}</div>
+        <div class="ob-meta">
+          <span class="ob-date">${daysLabel(ob)}</span>
+          ${ob.category ? `<span class="ob-category">${ob.category}</span>` : ''}
+          <span class="status-pill ${pillClass}">${pillLabel}</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <div class="ob-value">${formatCurrency(ob.value)}</div>
+        <div class="ob-actions">
+          ${payBtn}
+          ${editDel}
+        </div>
+      </div>
+    </div>`;
+}
+
+function updateCatFilter() {
+  const sel = document.getElementById('cat-filter');
+  if (!sel) return;
+  const current = sel.value;
+  const usedCats = [...new Set(obligations.map(o => o.category).filter(Boolean))];
+  sel.innerHTML = '<option value="">Todas categorias</option>' +
+    usedCats.map(c => `<option value="${c}" ${c===current?'selected':''}>${c}</option>`).join('');
+}
+
+// ── ACTIONS ───────────────────────────────────────────
+function togglePaid(id) {
+  const ob = obligations.find(o => o.id === id);
+  if (!ob) return;
+  ob.paid = !ob.paid;
+  save();
+  renderAll();
+  showToast(ob.paid ? '✅ Marcado como pago!' : '↩️ Desmarcado');
+}
+
+function deleteOb(id) {
+  if (!confirm('Excluir esta obrigação?')) return;
+  obligations = obligations.filter(o => o.id !== id);
+  save();
+  renderAll();
+  showToast('🗑 Obrigação excluída');
+}
+
+function editOb(id) {
+  const ob = obligations.find(o => o.id === id);
+  if (!ob) return;
+  editingId = id;
+  document.getElementById('f-name').value     = ob.name;
+  document.getElementById('f-value').value    = ob.value;
+  document.getElementById('f-date').value     = ob.due;
+  document.getElementById('f-category').value = ob.category || '';
+  document.getElementById('modal-title').textContent = 'Editar Obrigação';
+  renderCatSuggestions();
+  openModal();
+}
+
+// ── FILTER ────────────────────────────────────────────
+function setFilter(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderList();
+}
+
+// ── MODAL ─────────────────────────────────────────────
+function openModal() {
+  if (!editingId) {
+    document.getElementById('f-name').value     = '';
+    document.getElementById('f-value').value    = '';
+    document.getElementById('f-date').value     = '';
+    document.getElementById('f-category').value = '';
+    document.getElementById('modal-title').textContent = 'Nova Obrigação';
+  }
+  renderCatSuggestions();
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-name').focus(), 300);
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  editingId = null;
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+function renderCatSuggestions() {
+  const current = document.getElementById('f-category').value;
+  document.getElementById('cat-suggestions').innerHTML =
+    categories.map(c => `<button class="cat-chip ${c===current?'selected':''}" onclick="selectCat('${c}')">${c}</button>`).join('');
+}
+
+function selectCat(c) {
+  document.getElementById('f-category').value = c;
+  renderCatSuggestions();
+}
+
+// Watch category input
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('f-category').addEventListener('input', renderCatSuggestions);
+});
+
+// ── SUBMIT ────────────────────────────────────────────
+function submitForm() {
+  const name     = document.getElementById('f-name').value.trim();
+  const value    = document.getElementById('f-value').value;
+  const due      = document.getElementById('f-date').value;
+  const category = document.getElementById('f-category').value.trim();
+
+  if (!name)  return alert('Informe o nome da obrigação.');
+  if (!value) return alert('Informe o valor.');
+  if (!due)   return alert('Informe a data de vencimento.');
+
+  // Save new category
+  if (category && !categories.includes(category)) {
+    categories.push(category);
+  }
+
+  if (editingId) {
+    const ob = obligations.find(o => o.id === editingId);
+    ob.name = name; ob.value = value; ob.due = due; ob.category = category;
+    showToast('✏️ Obrigação atualizada!');
+  } else {
+    obligations.push({ id: Date.now().toString(), name, value, due, category, paid: false });
+    showToast('🎉 Obrigação adicionada!');
+  }
+
+  save();
+  closeModal();
+  renderAll();
+}
+
+// ── RENDER ALL ────────────────────────────────────────
+function renderAll() {
+  renderSummary();
+  renderList();
+  renderManage();
+}
+
+// ── PAGE NAV ──────────────────────────────────────────
+function showPage(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav-btn').forEach(t => t.classList.remove('active'));
+
+  document.getElementById('page-' + page).classList.add('active');
+
+  // Sync desktop nav
+  const tabs = document.querySelectorAll('.nav-tab');
+  if (page === 'dashboard') tabs[0].classList.add('active');
+  if (page === 'manage')    tabs[1].classList.add('active');
+
+  // Sync mobile nav
+  if (btn) btn.classList.add('active');
+}
+
+// ── TOAST ─────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── PWA: REGISTRO DO SERVICE WORKER ───────────────────
+// Esse código roda no HTML e diz pro navegador:
+// "existe um service worker em sw.js, por favor registre ele".
+// Só funciona em HTTPS (ou localhost para testes).
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('./sw.js')
+      .then(reg => {
+        console.log('[App] Service Worker registrado! Scope:', reg.scope);
+      })
+      .catch(err => {
+        console.warn('[App] Falha ao registrar SW:', err);
+      });
+  });
+}
+
+// ── INIT ──────────────────────────────────────────────
+load();
+
+// Seed demo data if empty
+if (obligations.length === 0) {
+  const today = new Date();
+  const fmt = d => d.toISOString().split('T')[0];
+  const add = (days) => { const d = new Date(today); d.setDate(today.getDate() + days); return fmt(d); };
+
+  obligations = [
+    { id: '1', name: 'Aluguel', value: 1800, due: add(3), category: 'Moradia', paid: false },
+    { id: '2', name: 'Internet Vivo', value: 119.90, due: add(1), category: 'Serviços', paid: false },
+    { id: '3', name: 'Plano de Saúde', value: 540, due: add(-2), category: 'Saúde', paid: false },
+    { id: '4', name: 'IPTU Parcela', value: 320, due: add(12), category: 'Impostos', paid: false },
+    { id: '5', name: 'Gasolina/Transporte', value: 280, due: add(8), category: 'Transporte', paid: true },
+    { id: '6', name: 'Escola', value: 950, due: add(0), category: 'Educação', paid: false },
+  ];
+  save();
+}
+
+renderAll();
+</script>
+</body>
+</html>
