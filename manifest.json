@@ -2,7 +2,7 @@
   "name": "FinTrack — Obrigações",
   "short_name": "FinTrack",
   "description": "Controle de obrigações financeiras",
-  "start_url": "/index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#F9FAFB",
