@@ -9,7 +9,14 @@
        Diz ao navegador que isso é um PWA instalável.
        Define nome, ícone e como o app abre.
   ═══════════════════════════════════════════════════════════════ -->
-  <link rel="manifest" href="./manifest.json">
+  
+<link rel="manifest" href="./manifest.json">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('SW registrado!'));
+  }
+</script>
 
   <!-- Cor da barra de status no Android -->
   <meta name="theme-color" content="#10B981">
